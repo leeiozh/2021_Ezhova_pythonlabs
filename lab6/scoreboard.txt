@@ -3,3 +3,4 @@ Ivan: 57
 ll: 57
 ll: 75
 Yong man: 51
+Liza: 48
