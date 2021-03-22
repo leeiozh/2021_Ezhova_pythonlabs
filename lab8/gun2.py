@@ -595,10 +595,12 @@ while done == -1:
             done = 0
         screen.fill(ORANGE)
         font = pygame.font.SysFont("dejavusansmono", 30)
-        score_surface_first = [font.render("Play with sound", True, WHITE), font.render("WASD - move", True, WHITE),
+        score_surface_first = [font.render("Please, play with sound", True, WHITE),
+                               font.render("WASD - move", True, WHITE),
                                font.render("F - boost on, G - boost off", True, WHITE),
-                               font.render("LKM - standart shoot, RKM - big shoot", True, WHITE)]
-        for i in range(4):
+                               font.render("LKM - standart shoot, RKM - big shoot", True, WHITE),
+                               font.render("Press SPACE to start", True, WHITE)]
+        for i in range(5):
             screen.blit(score_surface_first[i], [60, 60 + 50 * i])
         pygame.display.update()
 
