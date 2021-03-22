@@ -331,7 +331,7 @@ class ScoreTable:
 
     def draw(self, screen):
         # making list with strings about now user's score
-        score_surface = [self.font.render("Tergets hitted: {}".format(self.smashed_targets), True, BLACK),
+        score_surface = [self.font.render("Targets hitted: {}".format(self.smashed_targets), True, BLACK),
                          self.font.render("Balls used: {}".format(self.number_of_used_balls), True, BLACK)]
         # conditions for changing color of the score string
         if self.score() >= 0:
@@ -350,6 +350,10 @@ def quit_condition(pressed_button):
     if pressed_button == pygame.QUIT:
         finished = 1
     return finished
+
+
+def space_condition(pressed_button):
+    return pressed_button == pygame.K_SPACE
 
 
 motion = False
@@ -511,10 +515,12 @@ class Editor:
                     self.manna = 0
                     self.manna_increase = 1
 
-
             # make gun move up and down on the screen
             elif event.type == pygame.KEYDOWN:
-                Editor.move_machine(event, self)
+                if event.key == pygame.K_SPACE:
+                    return True
+                else:
+                    Editor.move_machine(event, self)
 
         return done
 
@@ -574,13 +580,30 @@ class Editor:
 
 screen = pygame.display.set_mode(SCREEN_SIZE)
 
-done = 0
+done = -1
 level = 0
 i = 0
 clock = pygame.time.Clock()
 
 edit_events = Editor(number_targets=3, number_new_targets=2)
-# cycle which make these program work repeatedly
+
+
+# first page of the program
+while done == -1:
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            done = 0
+        screen.fill(ORANGE)
+        font = pygame.font.SysFont("dejavusansmono", 30)
+        score_surface_first = [font.render("Play with sound", True, WHITE), font.render("WASD - move", True, WHITE),
+                               font.render("F - boost on, G - boost off", True, WHITE),
+                               font.render("LKM - standart shoot, RKM - big shoot", True, WHITE)]
+        for i in range(4):
+            screen.blit(score_surface_first[i], [60, 60 + 50 * i])
+        pygame.display.update()
+
+
+# loop which make these program work repeatedly
 while done == 0:
     clock.tick(15)
     screen.fill(WHITE)
@@ -590,7 +613,7 @@ while done == 0:
 
 if done == 2:
     # shows "Game over" table after tank's smashed by bomb
-    screen.fill(GREEN)
+    screen.fill(RED)
     font = pygame.font.SysFont("dejavusansmono", 100)
     score_surface1 = font.render("Game Over", True, WHITE)
     screen.blit(score_surface1, [230, 210])
