@@ -352,10 +352,6 @@ def quit_condition(pressed_button):
     return finished
 
 
-def space_condition(pressed_button):
-    return pressed_button == pygame.K_SPACE
-
-
 motion = False
 
 
