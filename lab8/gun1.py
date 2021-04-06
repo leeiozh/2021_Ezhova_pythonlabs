@@ -60,11 +60,11 @@ class Ball:
                 self.speed[i] = - int(self.speed[i] * reflection_decline_border)
                 self.speed[1 - i] = int(self.speed[1 - i] * reflection_decline)
 
-    def draw(self, screen):
+    def draw(self, screen_face):
         """
         Draws the ball on appropriate surface.
         """
-        circle(screen, self.color, self.coord, self.ball_radius)
+        circle(screen_face, self.color, self.coord, self.ball_radius)
 
 
 class Gun:
@@ -72,10 +72,12 @@ class Gun:
     Class for the movement and focusing of the gun
     """
 
-    def __init__(self, coord=[30, SCREEN_SIZE[1] // 2], angle=0, maximum_power=80, minimum_power=10, gun_color=BLACK):
+    def __init__(self, coord=None, angle=0, maximum_power=80, minimum_power=10, gun_color=BLACK):
         """
-        Seting of coordinates, direction, minimums and maximums power and color of the gun
+        Setting of coordinates, direction, minimums and maximums power and color of the gun
         """
+        if coord is None:
+            coord = [30, SCREEN_SIZE[1] // 2]
         self.coord = coord
         self.angle = angle
         self.gun_color = gun_color
@@ -118,13 +120,12 @@ class Gun:
         speed = int(self.power * 1.3)
         angle = self.angle
         ball = Ball(list(self.coord), [int(speed * np.cos(angle)), int(speed * np.sin(angle))])
-        # deactivating of the gun, set minimumimum power for the next reload
         self.power = self.minimum_power
         self.active = False
         self.gun_color = BLACK
         return ball
 
-    def draw(self, screen):
+    def draw(self, screen_space):
         """
         Drawing the gun on the screen
         """
@@ -139,7 +140,7 @@ class Gun:
         gun_shape.append((gun_position + vec_2 - vec_1).tolist())
         gun_shape.append((gun_position - vec_1).tolist())
         # drawing the gun
-        polygon(screen, self.gun_color, gun_shape)
+        polygon(screen_space, self.gun_color, gun_shape)
 
 
 class Target:
@@ -169,11 +170,11 @@ class Target:
         distantion = sum([(self.coord[i] - ball.coord[i]) ** 2 for i in range(2)]) ** 0.5
         return distantion <= minimum_distantion
 
-    def draw(self, screen):
+    def draw(self, screen_space):
         """
         Draws the target on the screen
         """
-        circle(screen, self.color, self.coord, self.ball_radius)
+        circle(screen_space, self.color, self.coord, self.ball_radius)
 
 
 class ScoreTable:
@@ -193,7 +194,7 @@ class ScoreTable:
         """
         return self.smashed_targets - self.number_of_used_balls
 
-    def draw(self, screen):
+    def draw(self, screen_space):
         # making list with strings about now user's score
         score_surface = [self.font.render("Targets hitted: {}".format(self.smashed_targets), True, BLACK),
                          self.font.render("Balls used: {}".format(self.number_of_used_balls), True, BLACK)]
@@ -204,10 +205,13 @@ class ScoreTable:
             score_surface.append(self.font.render("Total score: {}".format(self.score()), True, RED))
         # addition of strings in the right corner
         for i in range(3):
-            screen.blit(score_surface[i], [10, 10 + 30 * i])
+            screen_space.blit(score_surface[i], [10, 10 + 30 * i])
 
 
 def quit_condition(pressed_button):
+    """
+    condition of quit by exit button
+    """
     finished = False
     if pressed_button == pygame.QUIT:
         finished = True
@@ -228,11 +232,11 @@ class editor:
         self.number_targets = number_targets
         self.new_mission()
 
-    def process(self, events, screen):
+    def process(self, events, screen_space):
         """
         Focusing of the gun, move ball, look, if there were some strikes
         """
-        done = self.user_events(events)
+        donor = self.user_events(events)
         # look if the mouse was moved to change gun's orientation
         if pygame.mouse.get_focused():
             mouse_position = pygame.mouse.get_pos()
@@ -240,16 +244,16 @@ class editor:
 
         self.move()
         self.strike()
-        self.draw(screen)
+        self.draw(screen_space)
 
         if len(self.targets) == 0 and len(self.balls) == 0:
             self.new_mission()
 
-        return done
+        return donor
 
     def new_mission(self):
         """
-        Addition of new targets after desrtoying the old one
+        Addition of new targets after destroying the old one
         """
         # make balls even smaller because of the big count
         if self.score_table.score() < 0:
@@ -261,26 +265,25 @@ class editor:
                     ball_radius=randint(max(1, 30 - 2 * self.score_table.score()), 30 - self.score_table.score())))
 
     def move(self):
-        '''
+        """
         Making balls fly with gravitation, raise the gun's power, removes dead balls
-        '''
+        """
         dead_balls = []
         for j, ball in enumerate(self.balls):
             ball.move(gravitation=5)
             if not ball.is_alive:
                 dead_balls.append(j)
-        # make balls dissapear
         for j in reversed(dead_balls):
             self.balls.pop(j)
         self.gun.gun_power()
 
     def user_events(self, events):
-        '''
-        Analize events from keyboard, mouse, etc.
-        '''
-        done = False
+        """
+        Analyze events from keyboard, mouse, etc.
+        """
+        donor = False
         for event in events:
-            done = quit_condition(event.type)
+            donor = quit_condition(event.type)
             # make gun grow and become red
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
@@ -297,19 +300,19 @@ class editor:
                 elif event.key == pygame.K_DOWN:
                     self.gun.move(5)
 
-        return done
+        return donor
 
-    def draw(self, screen):
+    def draw(self, screen_space):
         """
         Manage all drawing processes (balls', target's, gun's and score table's)
         """
         for target in self.targets:
-            target.draw(screen)
+            target.draw(screen_space)
         for ball in self.balls:
-            ball.draw(screen)
+            ball.draw(screen_space)
 
-        self.gun.draw(screen)
-        self.score_table.draw(screen)
+        self.gun.draw(screen_space)
+        self.score_table.draw(screen_space)
 
     def strike(self):
         """
@@ -336,7 +339,7 @@ done = False
 clock = pygame.time.Clock()
 
 edit_events = editor(number_targets=3)
-# cycle which make these program work repeatly
+# loop which make these program work repeatedly
 while not done:
     clock.tick(15)
     screen.fill(WHITE)
