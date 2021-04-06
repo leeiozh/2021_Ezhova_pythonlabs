@@ -6,7 +6,7 @@ from random import randint
 pygame.init()
 pygame.font.init()
 
-# initionalisation of colors, which was in using
+# initialisation of colors, which was in using
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
@@ -21,7 +21,7 @@ LIGHT = (200, 200, 230)
 army_color_1 = (60, 65, 18)
 SCREEN_SIZE = (800, 600)
 
-# initionalizing of sounds to play them during the game
+# initialisation of sounds to play them during the game
 begin_sound = pygame.mixer.Sound('Dendy.wav')
 shoot_sound = pygame.mixer.Sound('Tank.wav')
 motion_sound = pygame.mixer.Sound('Motion.wav')
@@ -35,6 +35,9 @@ bomb_sound = pygame.mixer.Sound('bomb_sound.wav')
 
 
 def rand_color():
+    """
+    return random color
+    """
     return randint(0, 180), randint(0, 180), randint(0, 180)
 
 
@@ -43,10 +46,12 @@ class Gun:
     Class for the movement and focusing of the gun
     """
 
-    def __init__(self, coord=[30, SCREEN_SIZE[1] // 2], angle=0, maximum_power=80, minimum_power=10, gun_color=BLACK):
+    def __init__(self, coord=None, angle=0, maximum_power=80, minimum_power=10, gun_color=BLACK):
         """
         Setting of coordinates, direction, minimum's and maximum's power and color of the gun
         """
+        if coord is None:
+            coord = [30, SCREEN_SIZE[1] // 2]
         self.coord = coord
         self.angle = angle
         self.gun_color = gun_color
@@ -92,18 +97,18 @@ class Gun:
 
         speed = int(self.power * 1.3)
         angle = self.angle
-        if not_manna_ball == True:
+        if not_manna_ball:
             ball = Ball(list(self.coord), [int(speed * np.cos(angle)), int(speed * np.sin(angle))], 0.8, 0.9)
         else:
             ball = Ball(list(self.coord), [int(speed * 0.7 * np.cos(angle)), int(speed * 0.7 * np.sin(angle))], 0.9,
                         0.9, ball_radius=60, color=LIGHT)
-        # deactivating of the gun, set minimumimum power for the next reload
+        # deactivating of the gun, set minimums power for the next reload
         self.power = self.minimum_power
         self.active = False
         self.gun_color = BLACK
         return ball
 
-    def draw(self, screen):
+    def draw(self, screen_space):
         """
         Drawing the gun on the screen
         """
@@ -118,21 +123,21 @@ class Gun:
         gun_shape.append((gun_position + vec_2 - vec_1).tolist())
         gun_shape.append((gun_position - vec_1).tolist())
         # drawing the gun
-        rect(screen, army_color, (self.coord[0] - 30, self.coord[1] - 20, 50, 40))
-        rect(screen, BLACK, (self.coord[0] - 30, self.coord[1] + 15, 50, 10))
-        rect(screen, BLACK, (self.coord[0] - 30, self.coord[1] - 25, 50, 10))
-        circle(screen, army_color_1, (self.coord[0], self.coord[1]), 15)
-        polygon(screen, self.gun_color, gun_shape)
+        rect(screen_space, army_color, (self.coord[0] - 30, self.coord[1] - 20, 50, 40))
+        rect(screen_space, BLACK, (self.coord[0] - 30, self.coord[1] + 15, 50, 10))
+        rect(screen_space, BLACK, (self.coord[0] - 30, self.coord[1] - 25, 50, 10))
+        circle(screen_space, army_color_1, (self.coord[0], self.coord[1]), 15)
+        polygon(screen_space, self.gun_color, gun_shape)
 
 
 class Ball:
     """
-    Creates a ball, controls it's movement
+    Creates a ball, controls its movement
     """
 
     def __init__(self, coord, speed, reflection_decline_border, reflection_decline, ball_radius=20, color=None):
         """
-        Set ball's parameters and thier meanings
+        Set ball's parameters and their meanings
         """
         self.speed = speed
         self.coord = coord
@@ -146,6 +151,9 @@ class Ball:
         self.kicked = False
 
     def were_kicked(self):
+        """
+        return true if ball was kicked
+        """
         self.kicked = True
 
     def move(self, time=1, gravitation=0):
@@ -174,11 +182,11 @@ class Ball:
                 self.speed[i] = - int(self.speed[i] * self.reflection_decline_border)
                 self.speed[1 - i] = int(self.speed[1 - i] * self.reflection_decline)
 
-    def draw(self, screen):
+    def draw(self, screen_space):
         """
         Draws the ball on appropriate surface
         """
-        circle(screen, self.color, self.coord, self.ball_radius)
+        circle(screen_space, self.color, self.coord, self.ball_radius)
 
 
 class Target(Ball):
@@ -206,14 +214,14 @@ class Target(Ball):
         Checks if the ball bumped into target
         """
         minimum_distantion = self.ball_radius + ball.ball_radius
-        distantion = sum([(self.coord[i] - ball.coord[i]) ** 2 for i in range(2)]) ** 0.5
+        distantion = sum([(self.coord[counter] - ball.coord[counter]) ** 2 for counter in range(2)]) ** 0.5
         return distantion <= minimum_distantion
 
 
 class New_target(Ball):
     def __init__(self, color, coord=None, ball_radius=30):
         """
-        Setting of coordinates, color and ball_radiusius of the target
+        Setting of coordinates, color and ball_radius of the target
         """
         if coord is None:
             coord = [randint(ball_radius, SCREEN_SIZE[0] - ball_radius),
@@ -230,43 +238,49 @@ class New_target(Ball):
         Checks if the ball bumped into target
         """
         minimum_distantion = self.ball_radius + ball.ball_radius
-        distantion = sum([(self.coord[i] - ball.coord[i]) ** 2 for i in range(2)]) ** 0.5
+        distantion = sum([(self.coord[counter] - ball.coord[counter]) ** 2 for counter in range(2)]) ** 0.5
 
         return distantion <= minimum_distantion
 
     def change_color_condition(self):
+        """
+        return color condition
+        """
         if self.color == dark_red:
             return True
         else:
             return False
 
     def change_color(self):
+        """
+        change a color
+        """
         self.color = dark_red
 
-    def draw_smile(self, screen):
+    def draw_smile(self, screen_space):
         """
         drawing smile on the screen
         """
-        circle(screen, BLACK, self.coord, self.ball_radius)
-        circle(screen, self.color, self.coord, self.ball_radius - 1)
+        circle(screen_space, BLACK, self.coord, self.ball_radius)
+        circle(screen_space, self.color, self.coord, self.ball_radius - 1)
 
         # drawing of eyes
-        for i in range(1, 3, 1):
-            circle(screen, BLACK,
-                   (self.coord[0] + (self.ball_radius * (-1) ** i) // 2, self.coord[1] - self.ball_radius // 3),
-                   self.ball_radius // (2 + i))
-            circle(screen, RED,
-                   (self.coord[0] + (self.ball_radius * (-1) ** i) // 2, self.coord[1] - self.ball_radius // 3),
-                   self.ball_radius // (2 + i) - 1, self.ball_radius // (8 * i))
+        for counter in range(1, 3, 1):
+            circle(screen_space, BLACK,
+                   (self.coord[0] + (self.ball_radius * (-1) ** counter) // 2, self.coord[1] - self.ball_radius // 3),
+                   self.ball_radius // (2 + counter))
+            circle(screen_space, RED,
+                   (self.coord[0] + (self.ball_radius * (-1) ** counter) // 2, self.coord[1] - self.ball_radius // 3),
+                   self.ball_radius // (2 + counter) - 1, self.ball_radius // (8 * counter))
         # drawing of mouth
-        rect(screen, BLACK,
+        rect(screen_space, BLACK,
              (self.coord[0] - self.ball_radius // 2, self.coord[1] + self.ball_radius // 3, self.ball_radius,
               self.ball_radius // 7))
         # drawing of eyebrows
-        for i in range(2):
-            line(screen, BLACK, (self.coord[0], self.coord[1] - self.ball_radius // 2),
-                 (self.coord[0] + ((-1) ** i) * self.ball_radius,
-                  self.coord[1] - self.ball_radius // 2 - randint(i + 1, i + 3) * self.ball_radius // 5), 4)
+        for counter in range(2):
+            line(screen_space, BLACK, (self.coord[0], self.coord[1] - self.ball_radius // 2),
+                 (self.coord[0] + ((-1) ** counter) * self.ball_radius,
+                  self.coord[1] - self.ball_radius // 2 - randint(counter + 1, counter + 3) * self.ball_radius // 5), 4)
 
     def motion(self):
         """
@@ -284,29 +298,43 @@ class Bomb:
     """
 
     def __init__(self, coord, length_book=160, high_book=200):
+        """
+        init bomb
+        """
         book_surf = pygame.image.load('Engl.png')
         self.book_rect = book_surf.get_rect(bottomright=(400, 500))
         self.coord = coord
         self.time = 1
         self.scale = pygame.transform.scale(book_surf, (length_book, high_book))
-        self.scale_rect = self.scale.get_rect(center=(self.coord))
+        self.scale_rect = self.scale.get_rect(center=self.coord)
 
     def grow_shadow(self):
+        """
+        make shadow grow
+        """
         self.time += 0.5
         rect(screen, GRAY, (self.coord[0] - 4 * int(self.time), self.coord[1] - 5 * int(self.time), 8 * int(self.time),
                             10 * int(self.time)))
 
     def insert_it(self):
+        """
+        make bomb sound
+        """
         screen.blit(self.scale, self.scale_rect)
         bomb_sound.play()
 
-    def timelimit(self):
+    def time_limit(self):
+        """
+        do boom if increase time limit
+        """
         if self.time >= 20:
             Bomb.insert_it(self)
             return True
-            self.time = 0
 
     def check_crush(self, gun):
+        """
+        check gun's crush
+        """
         if (abs(self.coord[0] - (gun.coord[0] - 5)) < 100) and (abs(self.coord[1] - gun.coord[1]) < 130):
             self.time = 0
             return True
@@ -318,6 +346,9 @@ class ScoreTable:
     """
 
     def __init__(self, smashed_targets=0, number_of_used_balls=0):
+        """
+        init scoretable
+        """
         self.smashed_targets = smashed_targets
         self.number_of_used_balls = number_of_used_balls
         # set font for writing
@@ -329,7 +360,10 @@ class ScoreTable:
         """
         return self.smashed_targets - self.number_of_used_balls
 
-    def draw(self, screen):
+    def draw(self, screen_space, curr_level):
+        """
+        draw scoretable
+        """
         # making list with strings about now user's score
         score_surface = [self.font.render("Targets hitted: {}".format(self.smashed_targets), True, BLACK),
                          self.font.render("Balls used: {}".format(self.number_of_used_balls), True, BLACK)]
@@ -339,13 +373,16 @@ class ScoreTable:
         if self.score() < 0:
             score_surface.append(self.font.render("Total score: {}".format(self.score()), True, RED))
 
-        score_surface.append(self.font.render("Level: {}".format(level), True, ORANGE))
+        score_surface.append(self.font.render("Level: {}".format(curr_level), True, ORANGE))
         # addition of strings in the right corner
-        for i in range(4):
-            screen.blit(score_surface[i], [10, 10 + 30 * i])
+        for counter in range(4):
+            screen_space.blit(score_surface[counter], [10, 10 + 30 * counter])
 
 
 def quit_condition(pressed_button):
+    """
+    return 1 if pressed quit button
+    """
     finished = 0
     if pressed_button == pygame.QUIT:
         finished = 1
@@ -362,6 +399,7 @@ class Editor:
 
     def __init__(self, number_targets=1, number_new_targets=1):
         # init all gun characteristics
+        self.key = None
         self.balls = []
         self.gun = Gun()
         self.targets = []
@@ -369,7 +407,7 @@ class Editor:
         self.score_table = ScoreTable()
         self.number_targets = number_targets
         self.number_new_targets = number_new_targets
-        self.new_mission()
+        self.new_mission(level)
         self.time = 0
         self.coord = (randint(80, SCREEN_SIZE[0] - 80), randint(100, SCREEN_SIZE[0] - 200))
         self.bomb = Bomb(self.coord)
@@ -377,11 +415,11 @@ class Editor:
         self.manna_increase = 1
         self.manna_collected = False
 
-    def process(self, events, screen):
+    def process(self, events, screen_space):
         """
         Focusing of the gun, move ball, look, if there were some strikes
         """
-        done = self.user_events(events)
+        donor = self.user_events(events)
         # look if the mouse was moved to change gun's orientation
         if pygame.mouse.get_focused():
             mouse_position = pygame.mouse.get_pos()
@@ -389,34 +427,35 @@ class Editor:
 
         self.move()
         self.strike()
-        self.draw(screen)
+        self.draw(screen_space)
 
         if (len(self.targets) == 0 and len(self.new_targets) == 0) and len(self.balls) == 0:
-            self.new_mission()
+            self.new_mission(level)
 
-        return done
+        return donor
 
-    def new_mission(self):
+    def new_mission(self, curr_level):
         """
-        Addition of new targets after desrtoying the old one
+        Addition of new targets after destroying the old one
         """
-        global level
-        level += 1
+
+        curr_level += 1
         # make balls even smaller because of the big count
         begin_sound.play()
         if self.score_table.score() < 0:
-            for i in range(self.number_targets):
+            for j in range(self.number_targets):
                 self.targets.append(Target(ball_radius=30))
-            for i in range(self.number_new_targets):
+            for j in range(self.number_new_targets):
                 self.new_targets.append(New_target(YELLOW, ball_radius=30))
         else:
-            for i in range(self.number_targets):
+            for j in range(self.number_targets):
                 self.targets.append(Target(
                     ball_radius=randint(max(1, 30 - 2 * self.score_table.score()), 30 - self.score_table.score())))
             for j in range(self.number_new_targets):
                 self.new_targets.append(New_target(YELLOW,
                                                    ball_radius=randint(max(1, 30 - 2 * self.score_table.score()),
                                                                        30 - self.score_table.score())))
+        return curr_level
 
     def move(self):
         """
@@ -440,43 +479,52 @@ class Editor:
         """
         Initiate bomb, looks if gun in bomb's area, finishes the game
         """
-        done = 0
+        donor = 0
         self.time += 1
         if self.time >= 40:
             self.bomb.grow_shadow()
-            if self.bomb.timelimit():
+            if self.bomb.time_limit():
                 if self.bomb.check_crush(self.gun):
-                    done = 2
+                    donor = 2
                 self.time = 0
                 coord = (randint(80, SCREEN_SIZE[0] - 80), randint(100, SCREEN_SIZE[0] - 200))
                 self.bomb = Bomb(coord)
-        return done
+        return donor
 
-    def move_machine(event, self):
-        if event.key == pygame.K_f:
+    def move_machine(self, new_event):
+        """
+        move machine by wasd buttons
+        """
+        if new_event.key == pygame.K_f:
             pygame.key.set_repeat(1)
-        if event.key == pygame.K_g:
+        if new_event.key == pygame.K_g:
             pygame.key.set_repeat(0)
-        if event.key == pygame.K_w:
+        if new_event.key == pygame.K_w:
             self.gun.move(0, -20)
             motion_sound.play()
-        if event.key == pygame.K_s:
+        if new_event.key == pygame.K_s:
             self.gun.move(0, 20)
             motion_sound.play()
-        if event.key == pygame.K_d:
+        if new_event.key == pygame.K_d:
             self.gun.move(20, 0)
             motion_sound.play()
-        if event.key == pygame.K_a:
+        if new_event.key == pygame.K_a:
             self.gun.move(-20, 0)
             motion_sound.play()
 
     def collect_manna(self):
+        """
+        update manna line
+        """
         rect(screen, BLACK, (278, 8, 303, 13), 2)
         self.manna += self.manna_increase
         rect(screen, BLUE, (280, 10, 2 * self.manna, 10))
         self.manna_collected = Editor.stop_collect_manna(self)
 
     def stop_collect_manna(self):
+        """
+        stop and update manna
+        """
         if self.manna == 149:
             collected_sound.play()
         if self.manna == 150:
@@ -486,25 +534,25 @@ class Editor:
 
     def user_events(self, events):
         """
-        Analize events from keyboard, mouse, etc.
+        Analyze events from keyboard and mouse
         """
-        done = Editor.check_bomb(self)
+        donor = Editor.check_bomb(self)
         Editor.collect_manna(self)
-        for event in events:
-            done = quit_condition(event.type)
+        for new_event in events:
+            donor = quit_condition(new_event.type)
             # make gun grow and become red
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1 or (event.button == 3 and self.manna_collected):
+            if new_event.type == pygame.MOUSEBUTTONDOWN:
+                if new_event.button == 1 or (new_event.button == 3 and self.manna_collected):
                     self.gun.activate()
-                elif event.button == 3 and self.manna_collected == False:
+                elif new_event.button == 3 and self.manna_collected == False:
                     error_sound.play()
             # create new ball with speed according to the gun's power and the direction according gun's direction
-            elif event.type == pygame.MOUSEBUTTONUP:
-                if event.button == 1:
+            elif new_event.type == pygame.MOUSEBUTTONUP:
+                if new_event.button == 1:
                     self.balls.append(self.gun.strike(True))
                     shoot_sound.play()
                     self.score_table.number_of_used_balls += 1
-                if event.button == 3 and self.manna_collected:
+                if new_event.button == 3 and self.manna_collected:
                     self.balls.append(self.gun.strike(False))
                     Manna_sound.play()
                     self.manna_collected = 0
@@ -512,26 +560,26 @@ class Editor:
                     self.manna_increase = 1
 
             # make gun move up and down on the screen
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
+            elif new_event.type == pygame.KEYDOWN:
+                if new_event.key == pygame.K_SPACE:
                     return True
                 else:
-                    Editor.move_machine(event, self)
+                    Editor.move_machine(self, new_event)
 
-        return done
+        return donor
 
-    def draw(self, screen):
+    def draw(self, screen_space):
         """
         Manage all drawing processes (balls', target's, gun's and score table's)
         """
         for target in self.targets:
-            target.draw(screen)
+            target.draw(screen_space)
         for ball in self.balls:
-            ball.draw(screen)
+            ball.draw(screen_space)
         for new_target in self.new_targets:
-            new_target.draw_smile(screen)
-        self.gun.draw(screen)
-        self.score_table.draw(screen)
+            new_target.draw_smile(screen_space)
+        self.gun.draw(screen_space)
+        self.score_table.draw(screen_space, level)
 
     def strike(self):
         """
@@ -540,10 +588,10 @@ class Editor:
         strikes = []
         targets_strikes = []
         # make list with broken targets
-        for i, ball in enumerate(self.balls):
+        for counter, ball in enumerate(self.balls):
             for j, target in enumerate(self.targets):
                 if target.check_bumping(ball):
-                    strikes.append([i, j])
+                    strikes.append([counter, j])
                     targets_strikes.append(j)
         targets_strikes.sort()
         # making list with targets for deleting
@@ -555,14 +603,14 @@ class Editor:
         strikes = []
         targets_strikes = []
         # make list with broken targets
-        for i, ball in enumerate(self.balls):
+        for counter, ball in enumerate(self.balls):
             for j, target in enumerate(self.new_targets):
                 if target.check_bumping(ball) and target.change_color_condition():
-                    strikes.append([i, j])
+                    strikes.append([counter, j])
                     targets_strikes.append(j)
                     die_smile_sound.play()
 
-                elif (target.check_bumping(ball)) and target.change_color_condition() == False:
+                elif (target.check_bumping(ball)) and not target.change_color_condition():
                     ball.were_kicked()
                     target.change_color()
                     angry_smile_sound.play()
@@ -583,7 +631,6 @@ clock = pygame.time.Clock()
 
 edit_events = Editor(number_targets=3, number_new_targets=2)
 
-
 # first page of the program
 while done == -1:
     for event in pygame.event.get():
@@ -594,12 +641,11 @@ while done == -1:
         score_surface_first = [font.render("Please, play with sound", True, WHITE),
                                font.render("WASD - move", True, WHITE),
                                font.render("F - boost on, G - boost off", True, WHITE),
-                               font.render("LKM - standart shoot, RKM - big shoot", True, WHITE),
+                               font.render("LKM - standard shoot, RKM - big shoot", True, WHITE),
                                font.render("Press SPACE to start", True, WHITE)]
         for i in range(5):
             screen.blit(score_surface_first[i], [60, 60 + 50 * i])
         pygame.display.update()
-
 
 # loop which make these program work repeatedly
 while done == 0:
